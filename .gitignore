@@ -6,10 +6,14 @@
 *.lo
 *.o
 *.obj
-
+.idea
+inference_model_cls
+inference_model_det
+inference_model_shape
 # Precompiled Headers
 *.gch
 *.pch
+build
 
 # Compiled Dynamic libraries
 *.so
