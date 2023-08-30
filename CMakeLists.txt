@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(defect_detection)
 
-set(FASTDEPLOY_DIR "E:/FastDeploy/build/install")
+set(FASTDEPLOY_DIR "E:/FastDeploy/build_cpu/install")
 
 set(DLL_NAME "fdd")
 include(${FASTDEPLOY_DIR}/FastDeploy.cmake)
