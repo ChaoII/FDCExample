@@ -4,30 +4,30 @@
 
 #include "defect_detect.h"
 
-bool init_det_model(void **model, const char *model_dir, const fastdeploy::RuntimeOption &opt) {
+bool init_det_model(model_handle_t*model_handle, const char *model_dir, const fastdeploy::RuntimeOption &opt) {
 
     std::string model_path = std::string(model_dir) + "model.pdmodel";
     std::string param_path = std::string(model_dir) + "model.pdiparams";
     std::string config_path = std::string(model_dir) + "infer_cfg.yml";
-    *model = new fastdeploy::vision::detection::PPYOLOE(model_path,
-                                                        param_path,
-                                                        config_path,
-                                                        opt);
-    if (!static_cast<fastdeploy::vision::detection::PPYOLOE *>(*model)->Initialized()) {
+    *model_handle = new fastdeploy::vision::detection::PPYOLOE(model_path,
+                                                               param_path,
+                                                               config_path,
+                                                               opt);
+    if (!static_cast<fastdeploy::vision::detection::PPYOLOE *>(*model_handle)->Initialized()) {
         return false;
     }
     return true;
 }
 
-bool init_rec_model(void **model, const char *model_dir, const fastdeploy::RuntimeOption &opt) {
+bool init_rec_model(model_handle_t*model_handle, const char *model_dir, const fastdeploy::RuntimeOption &opt) {
     std::string model_path = std::string(model_dir) + "model.pdmodel";
     std::string param_path = std::string(model_dir) + "model.pdiparams";
     std::string config_path = std::string(model_dir) + "infer_cfg.yml";
-    *model = new fastdeploy::vision::classification::MobileNetv3(model_path,
-                                                                 param_path,
-                                                                 config_path,
-                                                                 opt);
-    if (!static_cast<fastdeploy::vision::classification::MobileNetv3 *>(*model)->Initialized()) {
+    *model_handle = new fastdeploy::vision::classification::MobileNetv3(model_path,
+                                                                        param_path,
+                                                                        config_path,
+                                                                        opt);
+    if (!static_cast<fastdeploy::vision::classification::MobileNetv3 *>(*model_handle)->Initialized()) {
         return false;
     }
     return true;
@@ -47,7 +47,7 @@ std::vector<SortedArray> sort_det_result(fastdeploy::vision::DetectionResult &re
     return sorted_array;
 }
 
-bool init_model(void **model, const char *model_dir, ModeType model_type, int thread_num, bool use_gpu) {
+bool init_model(model_handle_t*model_handle, const char *model_dir, ModeType model_type, int thread_num, bool use_gpu) {
     fastdeploy::RuntimeOption opt;
     opt.UseOrtBackend();
     opt.SetCpuThreadNum(thread_num);
@@ -55,23 +55,23 @@ bool init_model(void **model, const char *model_dir, ModeType model_type, int th
         opt.UseGpu();
     }
     if (model_type == ModeType::REC_MODEL) {
-        return init_rec_model(model, model_dir, opt);
+        return init_rec_model(model_handle, model_dir, opt);
     } else if (model_type == ModeType::DET_MODEL) {
-        return init_det_model(model, model_dir, opt);
+        return init_det_model(model_handle, model_dir, opt);
     } else {
         return false;
     }
 }
 
-bool obj_detection(void *model, void *buffer,
-                     void *out_buffer,
-                     int w, int h,
-                     DetResult *ret,
-                     float vis_threshold,
-                     bool draw_text) {
+bool obj_detection(model_handle_t model_handle, void *buffer,
+                   void *out_buffer,
+                   int w, int h,
+                   DetResult *ret,
+                   float vis_threshold,
+                   bool draw_text) {
     fastdeploy::vision::DetectionResult result;
     cv::Mat img = cv::Mat(h, w, CV_8UC3, buffer);
-    static_cast<fastdeploy::vision::detection::PPYOLOE *>(model)->Predict(img, &result);
+    static_cast<fastdeploy::vision::detection::PPYOLOE *>(model_handle)->Predict(img, &result);
     int boxes_num = static_cast<int>(result.boxes.size());
     int num = boxes_num > DET_NUM ? DET_NUM : boxes_num;
     std::vector<SortedArray> sorted_array = sort_det_result(result);
@@ -128,10 +128,10 @@ bool obj_detection(void *model, void *buffer,
 }
 
 
-bool shape_classify(void *model, void *buffer, int w, int h, ClsResult *ret) {
+bool shape_classify(model_handle_t model_handle, void *buffer, int w, int h, ClsResult *ret) {
     fastdeploy::vision::ClassifyResult result;
     cv::Mat img = cv::Mat(h, w, CV_8UC3, buffer);
-    static_cast<fastdeploy::vision::classification::MobileNetv3 *>(model)->Predict(img, &result);
+    static_cast<fastdeploy::vision::classification::MobileNetv3 *>(model_handle)->Predict(img, &result);
     int cls_num = static_cast<int>(result.label_ids.size());
     int num = cls_num > ret->size ? ret->size : cls_num;
     ret->size = num;
@@ -140,4 +140,15 @@ bool shape_classify(void *model, void *buffer, int w, int h, ClsResult *ret) {
         ret->scores[i] = result.scores[i];
     }
     return true;
+}
+
+void free_model(void *model_handle, const ModeType &model_type) {
+
+    if (model_type == ModeType::REC_MODEL) {
+        delete static_cast<fastdeploy::vision::classification::MobileNetv3 *>(model_handle);
+    } else if (model_type == ModeType::DET_MODEL) {
+        delete static_cast<fastdeploy::vision::detection::PPYOLOE *>(model_handle);
+    } else {
+        std::cerr << "model type only supported in [ModeType::REC_MODEL,ModeType::DET_MODEL ]" << std::endl;
+    }
 }
