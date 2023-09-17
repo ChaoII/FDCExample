@@ -1,20 +1,27 @@
 #include "defect_detect.h"
 
-
-#include <fstream>
+#include <gflags/gflags.h>
 #include <json/json.h>
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
+DEFINE_string(config_file, "config.json","config file");
+
 static std::unordered_map<int, std::string> index_map{std::make_pair<int, std::string>(0, "square"),
                                                       std::make_pair<int, std::string>(1, "triangle"),
                                                       std::make_pair<int, std::string>(2, "circle")};
-
-
-void test_det();
-
 void test_cls();
-
+/* the location index is like blew
+ *|-----------|----------|
+ *|           |          |
+ *|     0     |     1    |
+ *|           |          |
+ *|-----------|----------|
+ *|           |          |
+ *|     2     |     3    |
+ *|           |          |
+ *------------|----------|
+ * */
 void execute_det(const char *image_path,
                  const char *model_dir,
                  const ModeType &model_type,
@@ -22,17 +29,37 @@ void execute_det(const char *image_path,
                  bool show_image,
                  bool save_image,
                  int thread_num,
-                 bool use_gpu);
+                 bool use_gpu) {
+    void *model = nullptr;
+    init_model(&model, model_dir, model_type, thread_num, use_gpu);
+    auto img = cv::imread(image_path);
+    cv::resize(img, img, cv::Size(0, 0), 0.4, 0.4);
+    void *buffer = malloc(img.total() * img.elemSize());
+    //{0:"square", 1:"triangle",2:"circle"}
+    obj_detection(model, img.data, buffer, img.cols, img.rows, result, 0.5, true);
+    std::cout << "size is: " << result->size << std::endl;
+    cv::Mat dst_img = cv::Mat(img.rows, img.cols, CV_8UC3, buffer);
+    if (show_image) {
+        cv::imshow("img", dst_img);
+        cv::waitKey(0);
+    }
+    if (save_image) {
+        std::cout << "image save to [result.jpg] successfully" << std::endl;
+        cv::imwrite("result.jpg", dst_img);
+    }
+    free_model(model, ModeType::DET_MODEL);
+}
 
 int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        std::cerr << "[error]please add config.json parameter" << std::endl;
-        return -1;
-    }
+    gflags::ParseCommandLineFlags(&argc, &argv, true);
+//    if (argc < 2) {
+//        std::cerr << "[error]please add config.json parameter" << std::endl;
+//        return -1;
+//    }
     Json::Value root;
     std::ifstream ifs;
     DetResult result;
-    ifs.open(argv[1]);
+    ifs.open(FLAGS_config_file);
     Json::CharReaderBuilder reader_builder;
     JSONCPP_STRING errs;
     if (!parseFromStream(reader_builder, ifs, &root, &errs)) {
@@ -73,64 +100,10 @@ int main(int argc, char *argv[]) {
     write_ofs.close();
 }
 
-/* the location index is like blew
- *|-----------|----------|
- *|           |          |
- *|     0     |     1    |
- *|           |          |
- *|-----------|----------|
- *|           |          |
- *|     2     |     3    |
- *|           |          |
- *------------|----------|
- * */
-void test_det() {
-    void *model = nullptr;
-    DetResult result;
-    init_model(&model, "../inference_model_shape_new/", ModeType::DET_MODEL, 2, true);
-    auto img = cv::imread("../67.bmp");
-    cv::resize(img, img, cv::Size(0, 0), 0.4, 0.4);
-    void *buffer = malloc(img.total() * img.elemSize());
-    //{0:"square", 1:"triangle",2:"circle"}
-    obj_detection(model, img.data, buffer, img.cols, img.rows, &result, 0.5, true);
-    std::cout << "size is: " << result.size << std::endl;
-    for (size_t i = 0; i < result.size; i++) {
-        std::cout << "current shape is: " << index_map[result.label_ids[i]] << std::endl;
-        std::cout << "location index is: " << result.local_index[i] << std::endl;
-    }
-    cv::Mat dst_img = cv::Mat(img.rows, img.cols, CV_8UC3, buffer);
-    cv::imshow("img", dst_img);
-    cv::waitKey(0);
-    free_model(model, ModeType::DET_MODEL);
-}
 
-void execute_det(const char *image_path,
-                 const char *model_dir,
-                 const ModeType &model_type,
-                 DetResult *result,
-                 bool show_image,
-                 bool save_image,
-                 int thread_num,
-                 bool use_gpu) {
-    void *model = nullptr;
-    init_model(&model, model_dir, model_type, thread_num, use_gpu);
-    auto img = cv::imread(image_path);
-    cv::resize(img, img, cv::Size(0, 0), 0.4, 0.4);
-    void *buffer = malloc(img.total() * img.elemSize());
-    //{0:"square", 1:"triangle",2:"circle"}
-    obj_detection(model, img.data, buffer, img.cols, img.rows, result, 0.5, true);
-    std::cout << "size is: " << result->size << std::endl;
-    cv::Mat dst_img = cv::Mat(img.rows, img.cols, CV_8UC3, buffer);
-    if (show_image) {
-        cv::imshow("img", dst_img);
-        cv::waitKey(0);
-    }
-    if (save_image) {
-        std::cout << "image save to [result.jpg] successfully" << std::endl;
-        cv::imwrite("result.jpg", dst_img);
-    }
-    free_model(model, ModeType::DET_MODEL);
-}
+
+
+
 
 
 void test_cls() {

@@ -33,7 +33,15 @@ sudo make install
 ```shell
 sudo apt install libjsoncpp-dev
 ```
-todo
+##### 1.3 安装gflag
+```shell
+git clone  https://github.com/gflags/gflags.git
+cd gflags
+mkdir bd && cd bd
+cmake .. -DCMAKE_BUILD_PREFIX=install
+cmake --build . --config Release -j12
+cmake --build . --config Release --target install
+```
 #### 2. 编译安装
 ```shell
 camke ..
