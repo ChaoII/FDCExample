@@ -4,7 +4,7 @@
 
 #include "defect_detect.h"
 
-bool init_det_model(model_handle_t*model_handle, const char *model_dir, const fastdeploy::RuntimeOption &opt) {
+bool init_det_model(model_handle_t *model_handle, const char *model_dir, const fastdeploy::RuntimeOption &opt) {
 
     std::string model_path = std::string(model_dir) + "model.pdmodel";
     std::string param_path = std::string(model_dir) + "model.pdiparams";
@@ -19,7 +19,7 @@ bool init_det_model(model_handle_t*model_handle, const char *model_dir, const fa
     return true;
 }
 
-bool init_rec_model(model_handle_t*model_handle, const char *model_dir, const fastdeploy::RuntimeOption &opt) {
+bool init_rec_model(model_handle_t *model_handle, const char *model_dir, const fastdeploy::RuntimeOption &opt) {
     std::string model_path = std::string(model_dir) + "model.pdmodel";
     std::string param_path = std::string(model_dir) + "model.pdiparams";
     std::string config_path = std::string(model_dir) + "infer_cfg.yml";
@@ -47,7 +47,8 @@ std::vector<SortedArray> sort_det_result(fastdeploy::vision::DetectionResult &re
     return sorted_array;
 }
 
-bool init_model(model_handle_t*model_handle, const char *model_dir, ModeType model_type, int thread_num, bool use_gpu) {
+bool
+init_model(model_handle_t *model_handle, const char *model_dir, ModeType model_type, int thread_num, bool use_gpu) {
     fastdeploy::RuntimeOption opt;
     opt.UseOrtBackend();
     opt.SetCpuThreadNum(thread_num);
@@ -63,7 +64,8 @@ bool init_model(model_handle_t*model_handle, const char *model_dir, ModeType mod
     }
 }
 
-bool obj_detection(model_handle_t model_handle, void *buffer,
+bool obj_detection(model_handle_t model_handle,
+                   void *buffer,
                    void *out_buffer,
                    int w, int h,
                    DetResult *ret,
@@ -74,6 +76,7 @@ bool obj_detection(model_handle_t model_handle, void *buffer,
     static_cast<fastdeploy::vision::detection::PPYOLOE *>(model_handle)->Predict(img, &result);
     int boxes_num = static_cast<int>(result.boxes.size());
     int num = boxes_num > DET_NUM ? DET_NUM : boxes_num;
+    int valid_ret = 0;
     std::vector<SortedArray> sorted_array = sort_det_result(result);
     for (size_t i = 0; i < num; i++) {
         Box box;
@@ -84,7 +87,9 @@ bool obj_detection(model_handle_t model_handle, void *buffer,
         ret->box[i] = box;
         ret->scores[i] = result.scores[sorted_array[i].index];
         ret->label_ids[i] = result.label_ids[sorted_array[i].index];
+        ret->local_index[i] = get_local_index(box, w, h);
         if (ret->scores[i] > vis_threshold) {
+            valid_ret++;
             cv::rectangle(img, cv::Point2f(box.x_min, box.y_min),
                           cv::Point2f(box.x_max, box.y_max),
                           cv::Scalar(0, 255, 255),
@@ -123,6 +128,7 @@ bool obj_detection(model_handle_t model_handle, void *buffer,
             }
         }
     }
+    ret->size = valid_ret;
     memcpy(out_buffer, img.data, img.total() * img.elemSize());
     return true;
 }
@@ -151,4 +157,28 @@ void free_model(void *model_handle, const ModeType &model_type) {
     } else {
         std::cerr << "model type only supported in [ModeType::REC_MODEL,ModeType::DET_MODEL ]" << std::endl;
     }
+}
+
+int32_t get_local_index(const Box &box, int w, int h) {
+    auto mid_w = static_cast<float >(w) / 2.0f;
+    auto mid_h = static_cast<float >(h) / 2.0f;
+    Box box_0{0, 0, mid_w, mid_h};
+    Box box_1{mid_w, 0, static_cast<float >(w), mid_h};
+    Box box_2{0, mid_h, mid_w, static_cast<float >(h)};
+    Box box_3{mid_w, mid_h, static_cast<float >(w), static_cast<float >(h)};
+    if (is_contain(box, box_0)) return 0;
+    if (is_contain(box, box_1)) return 1;
+    if (is_contain(box, box_2)) return 2;
+    if (is_contain(box, box_3)) return 3;
+    return -1;
+}
+
+bool is_contain(const Box &inner_box, const Box &outer_box) {
+    if (inner_box.x_min > outer_box.x_min &&
+        inner_box.x_max < outer_box.x_max &&
+        inner_box.y_min > outer_box.y_min &&
+        inner_box.y_min < outer_box.y_max) {
+        return true;
+    }
+    return false;
 }

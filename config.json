@@ -1,0 +1,9 @@
+{
+  "image_path": "00011.jpg",
+  "model_dir": "inference_model_shape_new/",
+  "model_type": 1,
+  "thread_num": 1,
+  "use_gpu": false,
+  "show_image": true,
+  "save_image": false
+}
