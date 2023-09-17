@@ -1,0 +1,6 @@
+[submodule "thirdpart/jsoncpp"]
+	path = thirdpart/jsoncpp
+	url = https://github.com/open-source-parsers/jsoncpp.git
+[submodule "thirdpart/gflags"]
+	path = thirdpart/gflags
+	url = https://github.com/gflags/gflags.git

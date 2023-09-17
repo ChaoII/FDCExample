@@ -47,8 +47,11 @@ std::vector<SortedArray> sort_det_result(fastdeploy::vision::DetectionResult &re
     return sorted_array;
 }
 
-bool
-init_model(model_handle_t *model_handle, const char *model_dir, ModeType model_type, int thread_num, bool use_gpu) {
+bool init_model(model_handle_t *model_handle,
+                const char *model_dir,
+                ModeType model_type,
+                int thread_num,
+                bool use_gpu) {
     fastdeploy::RuntimeOption opt;
     opt.UseOrtBackend();
     opt.SetCpuThreadNum(thread_num);

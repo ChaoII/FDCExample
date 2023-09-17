@@ -11,6 +11,7 @@ inference_model_cls
 inference_model_det
 inference_model_shape
 inference_model_shape_new
+exports.h
 # Precompiled Headers
 *.gch
 *.pch

@@ -6,20 +6,7 @@
 
 #include <iostream>
 #include "fastdeploy/vision.h"
-
-#ifndef CAPI
-#define CAPI
-#endif
-
-#if defined(_WIN32)
-#ifdef CAPI
-#define API_EXPORT __declspec(dllexport)
-#else
-#define API_EXPORT __declspec(dllimport)
-#endif  // CAPI
-#else
-#define API_EXPORT __attribute__((visibility("default")))
-#endif  // _WIN32
+#include "exports.h"
 
 #define DET_NUM 200
 #define CLS_NUM 10
@@ -40,7 +27,9 @@ extern "C" {
 #endif
 
 enum ModeType {
+    // 识别模型
     REC_MODEL = 0,
+    // 检测模型
     DET_MODEL,
 };
 
@@ -75,42 +64,42 @@ bool init_det_model(model_handle_t *model_handle, const char *model_dir, const f
 bool init_rec_model(model_handle_t *model_handle, const char *model_dir, const fastdeploy::RuntimeOption &opt);
 
 ///
-/// \param model_handle
-/// \param model_dir
-/// \param model_type
-/// \param thread_num
-/// \param use_gpu
+/// \param model_handle 模型句柄
+/// \param model_dir 模型目录
+/// \param model_type 模型类型0分类模型，1检测模型
+/// \param thread_num 线程数
+/// \param use_gpu 是否开启GPU
 /// \return
-API_EXPORT bool init_model(model_handle_t *model_handle, const char *model_dir,
+FDD_EXPORT bool init_model(model_handle_t *model_handle, const char *model_dir,
                            ModeType model_type, int thread_num, bool use_gpu);
 ///
-/// \param model_handle
-/// \param buffer
-/// \param out_buffer
-/// \param w
-/// \param h
-/// \param ret
-/// \param vis_threshold
-/// \param draw_text
+/// \param model_handle 模型句柄
+/// \param buffer 输入图像raw buffer
+/// \param out_buffer 输出图像raw buffer
+/// \param w 图像宽
+/// \param h 图像高
+/// \param ret 模型推理结果结构体
+/// \param vis_threshold 可视化阈值
+/// \param draw_text 是否图中绘制结果
 /// \return
-API_EXPORT bool obj_detection(model_handle_t model_handle, void *buffer,
+FDD_EXPORT bool obj_detection(model_handle_t model_handle, void *buffer,
                               void *out_buffer,
                               int w, int h,
                               DetResult *ret,
                               float vis_threshold = 0.5,
                               bool draw_text = false);
 ///
-/// \param model_handle
-/// \param buffer
-/// \param w
-/// \param h
-/// \param ret
+/// \param model_handle 模型句柄
+/// \param buffer 输入图像raw buffer
+/// \param w 图像宽
+/// \param h 图像高
+/// \param ret 分类模型结果结构体
 /// \return
-API_EXPORT bool shape_classify(model_handle_t model_handle, void *buffer, int w, int h, ClsResult *ret);
+FDD_EXPORT bool shape_classify(model_handle_t model_handle, void *buffer, int w, int h, ClsResult *ret);
 ///
-/// \param model_handle
-/// \param mode_type
-API_EXPORT void free_model(model_handle_t model_handle, const ModeType &mode_type);
+/// \param model_handle 模型句柄
+/// \param mode_type 模型类型
+FDD_EXPORT void free_model(model_handle_t model_handle, const ModeType &mode_type);
 
 #ifdef __cplusplus
 }
