@@ -6,7 +6,21 @@
 
 #include <iostream>
 #include "fastdeploy/vision.h"
+
+#ifdef USE_AUTO_EXPORT
 #include "exports.h"
+#else
+#if defined(_WIN32)
+#ifdef FDD_EXPORTS
+#define FDD_EXPORT __declspec(dllexport)
+#else
+#define FDD_EXPORT __declspec(dllimport)
+#endif  // FDD_EXPORTS
+#else
+#define API_EXPORT __attribute__((visibility("default")))
+#endif  // _WIN32
+#endif
+
 
 #define DET_NUM 200
 #define CLS_NUM 10

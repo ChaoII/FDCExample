@@ -3,9 +3,11 @@ cmake_minimum_required(VERSION 3.20)
 project(defect_detection)
 
 set(CMAKE_CXX_STANDARD 17)
-option(USE_SUBMODULE "use submodule" ON)
 set(DLL_NAME "FDD" CACHE STRING "export dll name")
 set(FASTDEPLOY_DIR "E:/FastDeploy/build_cpu/install" CACHE PATH "fastdeploy install directory")
+
+option(USE_SUBMODULE "use submodule" ON)
+option(USE_AUTO_EXPORT "use generate_export_header" ON)
 
 if (CMAKE_BUILD_TYPE)
     string(TOLOWER ${CMAKE_BUILD_TYPE} _type)
@@ -28,10 +30,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
     add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 endif ()
-add_library(${DLL_NAME} SHARED
-        defect_detect.h
-        defect_detect.cpp)
-
+add_library(${DLL_NAME} SHARED defect_detect.h defect_detect.cpp)
 
 include(${FASTDEPLOY_DIR}/FastDeploy.cmake)
 include_directories(${FASTDEPLOY_INCS})
@@ -59,7 +58,9 @@ else ()
     target_link_libraries(${PROJECT_NAME} JsonCpp::JsonCpp ${GFLAGS_LIBRARIES})
 endif ()
 
-
-include(GenerateExportHeader)
-generate_export_header(${DLL_NAME} EXPORT_FILE_NAME ${CMAKE_SOURCE_DIR}/exports.h)
-#target_include_directories(${DLL_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
+if (USE_AUTO_EXPORT)
+    add_compile_definitions(USE_AUTO_EXPORT)
+    include(GenerateExportHeader)
+    generate_export_header(${DLL_NAME} EXPORT_FILE_NAME ${CMAKE_SOURCE_DIR}/exports.h)
+    #target_include_directories(${DLL_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
+endif ()
