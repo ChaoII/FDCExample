@@ -5,7 +5,7 @@ project(defect_detection)
 set(CMAKE_CXX_STANDARD 17)
 
 set(FASTDEPLOY_DIR "E:/FastDeploy/build_cpu/install" CACHE PATH "fastdeploy install directory")
-set(Jsoncpp_DIR  "F:/jsoncpp/build/install/lib/cmake/jsoncpp" CACHE PATH "jsoncpp cmake directory")
+set(jsoncpp_DIR "F:/jsoncpp/build/install/lib/cmake/jsoncpp" CACHE PATH "jsoncpp cmake directory")
 set(DLL_NAME "FDD" CACHE STRING "export dll name")
 message("-------------------")
 message("${jsoncpp_DIR}")

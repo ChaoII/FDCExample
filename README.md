@@ -35,7 +35,8 @@ sudo apt install libjsoncpp-dev
 ```
 todo
 #### 2. 编译安装
-```
-
+```shell
+camke ..
+cmake --build . --config Release -j12
 ```
 
