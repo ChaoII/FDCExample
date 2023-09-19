@@ -167,8 +167,8 @@ int32_t get_local_index(const Box &box, int w, int h) {
     auto mid_w = static_cast<float >(w) / 2.0f;
     auto mid_h = static_cast<float >(h) / 2.0f;
     Box box_0{0, 0, mid_w, mid_h};
-    Box box_1{mid_w, 0, static_cast<float >(w), mid_h};
-    Box box_2{0, mid_h, mid_w, static_cast<float >(h)};
+    Box box_1{0, mid_h, mid_w, static_cast<float >(h)};
+    Box box_2{mid_w, 0, static_cast<float >(w), mid_h};
     Box box_3{mid_w, mid_h, static_cast<float >(w), static_cast<float >(h)};
     if (is_contain(box, box_0)) return 0;
     if (is_contain(box, box_1)) return 1;
