@@ -31,6 +31,7 @@ void execute_det(const char *image_path,
                  DetResult *result,
                  bool show_image,
                  bool save_image,
+                 std::string src_img_path,
                  float vis_threshold,
                  int thread_num,
                  bool use_gpu) {
@@ -49,7 +50,7 @@ void execute_det(const char *image_path,
     }
     if (save_image) {
         std::cout << "image save to [result.jpg] successfully" << std::endl;
-        cv::imwrite("result.jpg", dst_img);
+        cv::imwrite(src_img_path, dst_img);
     }
     free(out_buffer);
     free_model(model, ModeType::DET_MODEL);
@@ -78,9 +79,19 @@ int main(int argc, char *argv[]) {
     float vis_threshold = root.get("vis_threshold", 0.55f).asFloat();
     bool show_image = root.get("show_image", false).asBool();
     bool save_image = root.get("save_image", false).asBool();
+    std::string res_img_path = root.get("res_img_path", "").asString();
+    if (save_image && res_img_path.empty()) {
+        std::cerr << "save image set true but res_image_path not be set" << std::endl;
+        return -1;
+    }
+    std::string res_path = root.get("res_path", "").asString();
+    if (res_path.empty()) {
+        std::cerr << "res file must specific and file extension must json";
+        return -1;
+    }
     execute_det(image_path.c_str(), model_dir.c_str(),
                 (ModeType) model_type,
-                &result, show_image, save_image, vis_threshold, thread_num, use_gpu);
+                &result, show_image, save_image, res_img_path, vis_threshold, thread_num, use_gpu);
 
     Json::Value dst_root, sub, box_sub;
     for (size_t i = 0; i < result.size; i++) {
@@ -98,7 +109,8 @@ int main(int argc, char *argv[]) {
     std::cout << dst_root << std::endl;
     Json::StreamWriterBuilder writer_builder;
     const std::unique_ptr<Json::StreamWriter> writer(writer_builder.newStreamWriter());
-    std::ofstream write_ofs("result.json");
+    std::ofstream write_ofs(res_path);
     write_ofs << Json::writeString(writer_builder, dst_root);
     write_ofs.close();
+    return 0;
 }

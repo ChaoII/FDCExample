@@ -24,13 +24,14 @@ void test_cls() {
 void test_object_det_chr() {
     model_handle_t model = nullptr;
     init_model(&model, "../models/inference_model_qx_det/", ModeType::DET_MODEL, 2, true);
-    char *ret = obj_detection_str(model, "../demos/22.bmp");
+    char *ret = (char *) malloc(10000);
+    obj_detection_str(model, "../demos/22.bmp", 0.75, ret);
     std::cout << ret << std::endl;
     free_ret_result(ret);
     free_model(model, ModeType::DET_MODEL);
 }
 
 int main() {
-    test_cls();
+//    test_cls();
     test_object_det_chr();
 }
