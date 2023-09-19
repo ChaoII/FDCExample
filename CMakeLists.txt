@@ -8,6 +8,9 @@ set(FASTDEPLOY_DIR "E:/FastDeploy/build_cpu/install" CACHE PATH "fastdeploy inst
 
 option(USE_SUBMODULE "use submodule" ON)
 option(USE_AUTO_EXPORT "use generate_export_header" ON)
+option(BUILD_TESTING "build unit test" ON)
+
+include_directories("${CMAKE_SOURCE_DIR}")
 
 if (CMAKE_BUILD_TYPE)
     string(TOLOWER ${CMAKE_BUILD_TYPE} _type)
@@ -34,15 +37,15 @@ add_library(${DLL_NAME} SHARED defect_detect.h defect_detect.cpp)
 
 include(${FASTDEPLOY_DIR}/FastDeploy.cmake)
 include_directories(${FASTDEPLOY_INCS})
-target_link_libraries(${DLL_NAME} ${FASTDEPLOY_LIBS})
+target_link_libraries(${DLL_NAME} PUBLIC ${FASTDEPLOY_LIBS})
 add_executable(${PROJECT_NAME} main.cpp)
-target_link_libraries(${PROJECT_NAME} ${DLL_NAME})
 target_compile_definitions(${DLL_NAME} PUBLIC FDD_EXPORTS)
 
 if (USE_SUBMODULE)
     add_subdirectory(thirdpart/jsoncpp)
-    target_link_libraries(${PROJECT_NAME} jsoncpp_lib)
+    target_link_libraries(${DLL_NAME} PUBLIC jsoncpp_lib)
     add_subdirectory(thirdpart/gflags)
+    target_link_libraries(${PROJECT_NAME} ${DLL_NAME})
     target_link_libraries(${PROJECT_NAME} gflags::gflags)
 else ()
     set(jsoncpp_DIR "F:/jsoncpp/build/install/lib/cmake/jsoncpp" CACHE PATH "jsoncpp cmake directory")
@@ -63,4 +66,9 @@ if (USE_AUTO_EXPORT)
     include(GenerateExportHeader)
     generate_export_header(${DLL_NAME} EXPORT_FILE_NAME ${CMAKE_SOURCE_DIR}/exports.h)
     #target_include_directories(${DLL_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
+endif ()
+
+if (BUILD_TESTING)
+    add_executable(test ${CMAKE_SOURCE_DIR}/test/test.cpp)
+    target_link_libraries(test ${DLL_NAME})
 endif ()

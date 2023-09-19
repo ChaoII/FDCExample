@@ -8,7 +8,9 @@
 #include "fastdeploy/vision.h"
 
 #ifdef USE_AUTO_EXPORT
+
 #include "exports.h"
+
 #else
 #if defined(_WIN32)
 #ifdef FDD_EXPORTS
@@ -102,6 +104,9 @@ FDD_EXPORT bool obj_detection(model_handle_t model_handle, void *buffer,
                               DetResult *ret,
                               float vis_threshold = 0.5,
                               bool draw_text = false);
+FDD_EXPORT char *obj_detection_str(model_handle_t model_handle, const char *image_path);
+
+FDD_EXPORT void free_ret_result(char* ret);
 ///
 /// \param model_handle 模型句柄
 /// \param buffer 输入图像raw buffer

@@ -3,6 +3,7 @@
 //
 
 #include "defect_detect.h"
+#include <json/json.h>
 
 bool init_det_model(model_handle_t *model_handle, const char *model_dir, const fastdeploy::RuntimeOption &opt) {
 
@@ -184,4 +185,37 @@ bool is_contain(const Box &inner_box, const Box &outer_box) {
         return true;
     }
     return false;
+}
+
+void free_ret_result(char *ret) {
+    free(ret);
+}
+
+char *obj_detection_str(model_handle_t model_handle, const char *image_path) {
+    Json::Value root;
+    DetResult result;
+    cv::Mat img = cv::imread(image_path);
+    void *out_buffer = malloc(img.total() * img.elemSize());
+    //{0:"square", 1:"triangle",2:"circle"}
+    obj_detection(model_handle, img.data, out_buffer, img.cols, img.rows, &result, 0.5, true);
+    Json::Value dst_root, sub, box_sub;
+    for (size_t i = 0; i < result.size; i++) {
+        box_sub["x_min"] = result.box[i].x_min;
+        box_sub["x_max"] = result.box[i].x_max;
+        box_sub["y_min"] = result.box[i].y_min;
+        box_sub["y_max"] = result.box[i].y_max;
+        sub["box"] = box_sub;
+        sub["score"] = result.scores[i];
+        sub["label"] = result.label_ids[i];
+        sub["location"] = result.local_index[i];
+        dst_root.append(sub);
+    }
+    std::cout << "[info] result is:" << std::endl;
+    std::cout << dst_root << std::endl;
+    Json::StreamWriterBuilder writer_builder;
+    const std::string json_file = Json::writeString(writer_builder, dst_root);
+    char *ret = (char *) malloc(json_file.length());
+    memcpy(ret, json_file.c_str(), json_file.length());
+    free(out_buffer);
+    return ret;
 }
