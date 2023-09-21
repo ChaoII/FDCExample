@@ -170,10 +170,10 @@ int32_t get_local_index_by_rect(const Box &box, int w, int h) {
     Box box_1{0, mid_h, mid_w, static_cast<float >(h)};
     Box box_2{mid_w, 0, static_cast<float >(w), mid_h};
     Box box_3{mid_w, mid_h, static_cast<float >(w), static_cast<float >(h)};
-    if (is_contain_by_rect(box, box_0)) return 0;
-    if (is_contain_by_rect(box, box_1)) return 1;
-    if (is_contain_by_rect(box, box_2)) return 2;
-    if (is_contain_by_rect(box, box_3)) return 3;
+    if (is_contain_by_rect(box, box_0)) return 1;
+    if (is_contain_by_rect(box, box_1)) return 3;
+    if (is_contain_by_rect(box, box_2)) return 0;
+    if (is_contain_by_rect(box, box_3)) return 2;
     return -1;
 }
 
@@ -186,10 +186,10 @@ int32_t get_local_index_by_center_point(const Box &box, int w, int h) {
     Box box_3{mid_w, mid_h, static_cast<float >(w), static_cast<float >(h)};
     float cent_point_x = (box.x_min + box.x_max) / 2;
     float cent_point_y = (box.y_min + box.y_max) / 2;
-    if (is_contain_by_point(cent_point_x, cent_point_y, box_0)) return 0;
-    if (is_contain_by_point(cent_point_x, cent_point_y, box_1)) return 1;
-    if (is_contain_by_point(cent_point_x, cent_point_y, box_2)) return 2;
-    if (is_contain_by_point(cent_point_x, cent_point_y, box_3)) return 3;
+    if (is_contain_by_point(cent_point_x, cent_point_y, box_0)) return 1;
+    if (is_contain_by_point(cent_point_x, cent_point_y, box_1)) return 3;
+    if (is_contain_by_point(cent_point_x, cent_point_y, box_2)) return 0;
+    if (is_contain_by_point(cent_point_x, cent_point_y, box_3)) return 2;
     return -1;
 }
 
