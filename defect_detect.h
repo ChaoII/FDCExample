@@ -71,9 +71,14 @@ typedef struct ClsResult {
     int size;
 } ClsResult;
 
-int32_t get_local_index(const Box &box, int w, int h);
 
-bool is_contain(const Box &inner_box, const Box &outer_box);
+bool is_contain_by_point(float src_x, float src_y, const Box &outer_box);
+
+bool is_contain_by_rect(const Box &inner_box, const Box &outer_box);
+
+int32_t get_local_index_by_rect(const Box &box, int w, int h);
+
+int32_t get_local_index_by_center_point(const Box &box, int w, int h);
 
 bool init_det_model(model_handle_t *model_handle, const char *model_dir, const fastdeploy::RuntimeOption &opt);
 
