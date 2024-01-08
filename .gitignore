@@ -1,6 +1,10 @@
 # Prerequisites
 *.d
-
+inference_model_cls
+inference_model_det
+inference_model_qx_det
+inference_model_shape
+inference_model_shape_new
 # Compiled Object files
 *.slo
 *.lo
